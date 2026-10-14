@@ -83,15 +83,20 @@ export default function ActivitiesPreview() {
                 className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 hover:border-blue-200 hover:-translate-y-2 cursor-pointer"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-64 sm:h-72 overflow-hidden bg-slate-950 flex items-center justify-center">
+                  <img
+                    src={activity.featured_image}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-125"
+                  />
                   <img
                     src={activity.featured_image}
                     alt={language === 'ar' ? activity.title_ar : activity.title_en}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="relative max-h-full max-w-full w-auto h-auto object-contain z-10 transition-transform duration-500 group-hover:scale-105 p-1"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className={`absolute top-4 ${language === 'ar' ? 'right-4' : 'left-4'}`}>
-                    <span className="px-3 py-1 bg-blue-600 text-white text-xs rounded-full font-medium shadow-lg">
+                  <div className={`absolute top-4 ${language === 'ar' ? 'right-4' : 'left-4'} z-20`}>
+                    <span className="px-3 py-1 bg-blue-600 text-white text-xs rounded-full font-medium shadow-lg backdrop-blur-sm">
                       {language === 'ar' ? activity.activity_type_ar : activity.activity_type_en}
                     </span>
                   </div>

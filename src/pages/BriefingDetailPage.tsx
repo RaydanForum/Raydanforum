@@ -93,53 +93,66 @@ export default function BriefingDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="relative h-[400px] lg:h-[500px] overflow-hidden">
-        <img
-          src={briefing.featured_image}
-          alt={language === 'ar' ? briefing.title_ar : briefing.title_en}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
+      {/* Top Header Section */}
+      <div className="bg-white border-b border-gray-200/80 pt-8 pb-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Link
+            to="/briefings"
+            className={`inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors mb-6 group ${
+              language === 'ar' ? 'flex-row-reverse' : ''
+            }`}
+          >
+            {language === 'ar' ? (
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            ) : (
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            )}
+            <span>{language === 'ar' ? 'العودة إلى الإحاطات' : 'Back to Briefings'}</span>
+          </Link>
 
-        <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
-          <div className="max-w-5xl mx-auto">
-            <Link
-              to="/briefings"
-              className={`inline-flex md:hidden items-center gap-2 text-white hover:text-emerald-300 transition-colors mb-6 ${
-                language === 'ar' ? 'flex-row-reverse' : ''
-              }`}
-            >
-              {language === 'ar' ? <ArrowRight className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
-              <span>{language === 'ar' ? 'العودة إلى الإحاطات' : 'Back to Briefings'}</span>
-            </Link>
-
-            <div className={`inline-block mb-4 px-4 py-2 bg-emerald-600 text-white rounded-full text-sm font-semibold ${
-              language === 'ar' ? 'mr-0' : 'ml-0'
-            }`}>
+          <div className="mb-4">
+            <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-semibold">
               {language === 'ar' ? briefing.category_ar : briefing.category_en}
-            </div>
-
-            <h1 className={`text-3xl lg:text-5xl font-bold text-white mb-4 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-              {language === 'ar' ? briefing.title_ar : briefing.title_en}
-            </h1>
-
-            <div className={`flex flex-wrap items-center gap-6 text-white/90 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                <User className="w-5 h-5" />
-                <span>{language === 'ar' ? briefing.author_ar : briefing.author_en}</span>
-              </div>
-              <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                <Calendar className="w-5 h-5" />
-                <span>
-                  {new Date(briefing.published_at).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-              </div>
-            </div>
+            </span>
           </div>
+
+          <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-snug mb-6 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+            {language === 'ar' ? briefing.title_ar : briefing.title_en}
+          </h1>
+
+          <div className={`flex flex-wrap items-center gap-4 text-sm text-gray-600 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+            <span className="inline-flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <User className="w-4 h-4 text-emerald-600" />
+              <span>{language === 'ar' ? briefing.author_ar : briefing.author_en}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <Calendar className="w-4 h-4 text-emerald-600" />
+              <span>
+                {new Date(briefing.published_at).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Featured Image Showcase Container */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="relative w-full rounded-2xl overflow-hidden bg-slate-950 shadow-xl border border-gray-200/80 flex items-center justify-center min-h-[320px] max-h-[550px] lg:max-h-[620px]">
+          <img
+            src={briefing.featured_image}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-125 pointer-events-none"
+          />
+          <img
+            src={briefing.featured_image}
+            alt={language === 'ar' ? briefing.title_ar : briefing.title_en}
+            className="relative max-h-[500px] lg:max-h-[580px] w-auto max-w-full object-contain z-10 p-2 sm:p-4 rounded-xl"
+          />
         </div>
       </div>
 

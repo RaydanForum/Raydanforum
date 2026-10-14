@@ -108,56 +108,71 @@ export default function ActivityDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="relative h-[400px] lg:h-[500px] overflow-hidden">
-        <img
-          src={activity.featured_image}
-          alt={language === 'ar' ? activity.title_ar : activity.title_en}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
+      {/* Top Header Section */}
+      <div className="bg-white border-b border-gray-200/80 pt-8 pb-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Link
+            to="/activities"
+            className={`inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors mb-6 group ${
+              language === 'ar' ? 'flex-row-reverse' : ''
+            }`}
+          >
+            {language === 'ar' ? (
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            ) : (
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            )}
+            <span>{language === 'ar' ? 'العودة إلى الأنشطة' : 'Back to Activities'}</span>
+          </Link>
 
-        <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
-          <div className="max-w-5xl mx-auto">
-            <Link
-              to="/activities"
-              className={`inline-flex md:hidden items-center gap-2 text-white hover:text-blue-300 transition-colors mb-6 ${
-                language === 'ar' ? 'flex-row-reverse' : ''
-              }`}
-            >
-              {language === 'ar' ? <ArrowRight className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
-              <span>{language === 'ar' ? 'العودة إلى الأنشطة' : 'Back to Activities'}</span>
-            </Link>
-
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold">
-                {language === 'ar' ? activity.activity_type_ar : activity.activity_type_en}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-semibold">
+              {language === 'ar' ? activity.activity_type_ar : activity.activity_type_en}
+            </span>
+            {activity.is_upcoming && (
+              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-semibold">
+                {language === 'ar' ? 'نشاط قادم' : 'Upcoming Event'}
               </span>
-              {activity.is_upcoming && (
-                <span className="px-4 py-2 bg-emerald-600 text-white rounded-full text-sm font-semibold">
-                  {language === 'ar' ? 'قادم' : 'Upcoming'}
-                </span>
-              )}
-            </div>
-
-            <h1 className={`text-3xl lg:text-5xl font-bold text-white mb-6 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-              {language === 'ar' ? activity.title_ar : activity.title_en}
-            </h1>
-
-            <div className={`flex flex-wrap items-center gap-6 text-white/90 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                <Calendar className="w-5 h-5" />
-                <span>{formatDate(activity.start_date)}</span>
-              </div>
-              <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                <Clock className="w-5 h-5" />
-                <span>{formatTime(activity.start_date)}</span>
-              </div>
-              <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                <MapPin className="w-5 h-5" />
-                <span>{language === 'ar' ? activity.location_ar : activity.location_en}</span>
-              </div>
-            </div>
+            )}
           </div>
+
+          <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-snug mb-6 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+            {language === 'ar' ? activity.title_ar : activity.title_en}
+          </h1>
+
+          <div className={`flex flex-wrap items-center gap-4 text-sm text-gray-600 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+            <span className="inline-flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <Calendar className="w-4 h-4 text-blue-600" />
+              <span>{formatDate(activity.start_date)}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <Clock className="w-4 h-4 text-blue-600" />
+              <span>{formatTime(activity.start_date)}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <span>{language === 'ar' ? activity.location_ar : activity.location_en}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Featured Image Showcase Container */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="relative w-full rounded-2xl overflow-hidden bg-slate-950 shadow-xl border border-gray-200/80 flex items-center justify-center min-h-[320px] max-h-[550px] lg:max-h-[620px]">
+          {/* Ambient blurred backdrop so the container always matches the image seamlessly */}
+          <img
+            src={activity.featured_image}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-125 pointer-events-none"
+          />
+          {/* The full uncropped image shown in its true glory */}
+          <img
+            src={activity.featured_image}
+            alt={language === 'ar' ? activity.title_ar : activity.title_en}
+            className="relative max-h-[500px] lg:max-h-[580px] w-auto max-w-full object-contain z-10 p-2 sm:p-4 rounded-xl"
+          />
         </div>
       </div>
 

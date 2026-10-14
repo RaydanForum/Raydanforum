@@ -18,7 +18,14 @@ type Briefing = {
 
 export default function BriefingsPreview() {
   const { language } = useLanguage();
-  const [briefings, setBriefings] = useState<Briefing[]>([]);
+  const [briefings, setBriefings] = useState<Briefing[]>(() => {
+    try {
+      const cached = localStorage.getItem('cached_briefings_preview');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +42,12 @@ export default function BriefingsPreview() {
 
       if (error) throw error;
 
-      setBriefings(data || []);
+      if (data) {
+        setBriefings(data);
+        try {
+          localStorage.setItem('cached_briefings_preview', JSON.stringify(data));
+        } catch {}
+      }
     } catch (error) {
       console.error('Error loading briefings:', error);
     } finally {
@@ -43,24 +55,18 @@ export default function BriefingsPreview() {
     }
   };
 
-  if (loading) {
+  if (loading && briefings.length === 0) {
     return (
       <section className="py-20 bg-gradient-to-br from-emerald-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="text-gray-400">جاري التحميل...</div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="h-64 rounded-xl bg-gray-100 animate-pulse" />
         </div>
       </section>
     );
   }
 
   if (briefings.length === 0) {
-    return (
-      <section className="py-20 bg-gradient-to-br from-emerald-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="text-gray-400">لا توجد إحاطات متاحة</div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   return (

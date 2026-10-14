@@ -258,6 +258,22 @@ function MemberForm({ member, onClose }: { member: TeamMember | null; onClose: (
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(
+          `حجم الصورة كبير جداً (${(file.size / (1024 * 1024)).toFixed(2)} ميجابايت).\nالحد الأقصى المسموح به هو 5 ميجابايت.\nيرجى تقليل حجم الصورة قبل رفعها.`
+        );
+        e.target.value = '';
+        return;
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
+        alert('صيغة الصورة غير مدعومة. الصيغ المسموحة هي: JPG, PNG, WEBP.');
+        e.target.value = '';
+        return;
+      }
+
       setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -275,9 +291,14 @@ function MemberForm({ member, onClose }: { member: TeamMember | null; onClose: (
   const uploadPhoto = async (): Promise<string> => {
     if (!photoFile) return formData.photo_url;
 
+    const maxSize = 5 * 1024 * 1024;
+    if (photoFile.size > maxSize) {
+      throw new Error(`حجم الصورة (${(photoFile.size / (1024 * 1024)).toFixed(2)} ميجابايت) يتجاوز الحد الأقصى (5 ميجابايت).`);
+    }
+
     setUploading(true);
     try {
-      const fileExt = photoFile.name.split('.').pop();
+      const fileExt = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
@@ -285,16 +306,29 @@ function MemberForm({ member, onClose }: { member: TeamMember | null; onClose: (
         .from('team-photos')
         .upload(filePath, photoFile);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Supabase upload error details:', uploadError);
+        const errMsg = uploadError.message || '';
+        if (errMsg.includes('exceeded the maximum allowed size') || (uploadError as any).statusCode === '413') {
+          throw new Error('حجم الصورة يتجاوز الحد الأقصى المسموح به (5 ميجابايت).');
+        }
+        if (errMsg.includes('mime') || (uploadError as any).statusCode === '400') {
+          throw new Error('صيغة الصورة غير مدعومة.');
+        }
+        if ((uploadError as any).statusCode === '401' || (uploadError as any).statusCode === '403' || errMsg.includes('policy')) {
+          throw new Error('انتهت صلاحية الجلسة أو ليس لديك صلاحية المشرف. يرجى تسجيل الخروج والدخول مجدداً.');
+        }
+        throw new Error(errMsg || 'فشل رفع الصورة');
+      }
 
       const { data } = supabase.storage
         .from('team-photos')
         .getPublicUrl(filePath);
 
       return data.publicUrl;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading photo:', error);
-      throw new Error('فشل رفع الصورة');
+      throw error instanceof Error ? error : new Error('فشل رفع الصورة');
     } finally {
       setUploading(false);
     }
@@ -320,16 +354,27 @@ function MemberForm({ member, onClose }: { member: TeamMember | null; onClose: (
           .from('team_members')
           .update(data)
           .eq('id', member.id);
-        if (error) throw error;
+        if (error) {
+          if (error.code === '42501' || error.message?.includes('policy')) {
+            throw new Error('انتهت صلاحية الجلسة أو ليس لديك إذن المشرف. يرجى إعادة تسجيل الدخول.');
+          }
+          throw error;
+        }
       } else {
         const { error } = await supabase.from('team_members').insert([data]);
-        if (error) throw error;
+        if (error) {
+          if (error.code === '42501' || error.message?.includes('policy')) {
+            throw new Error('انتهت صلاحية الجلسة أو ليس لديك إذن المشرف. يرجى إعادة تسجيل الدخول.');
+          }
+          throw error;
+        }
       }
 
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving team member:', error);
-      alert('حدث خطأ أثناء حفظ العضو');
+      const msg = error?.message || 'حدث خطأ غير معروف أثناء حفظ العضو';
+      alert(`تعذر حفظ العضو:\n${msg}`);
     } finally {
       setLoading(false);
     }

@@ -17,10 +17,39 @@ type Slide = {
   external_link?: string | null;
 };
 
+const DEFAULT_SLIDES: Slide[] = [
+  {
+    id: '5c8e0274-5b36-4d49-8d2d-33dff912e9ca',
+    title_ar: 'أقام منتدى ريدان فعالية في مدينة إسطنبول ضمن برامجه وأنشطته.',
+    title_en: 'Raydan Forum hosted an event in Istanbul.',
+    description_ar: 'ندوة دولية عن اليمن بالشراكة مع Forward Thinking ومركز المخا.',
+    description_en: 'An international Yemen seminar with Forward Thinking and the Mokha Center.',
+    image_url: 'https://rcvdprxiflggpianisfg.supabase.co/storage/v1/object/public/hero-images/5c8e0274-5b36-4d49-8d2d-33dff912e9ca-1768009750662.jpg',
+    display_order: 1,
+  },
+  {
+    id: '9cade7a8-aec6-403e-ad53-94d66f729549',
+    title_ar: 'ينظّم منتدى ريدان زيارة مهنية إلى إسطنبول ضمن أنشطته التعريفية بالملف اليمني.',
+    title_en: 'Raydan Forum Organizes a Professional Visit to Istanbul as Part of Its Outreach on the Yemeni File',
+    description_ar: 'نظّم منتدى ريدان زيارة مهنية إلى إسطنبول لتعريف المهتمين بتطورات اليمن.',
+    description_en: 'Raydan Forum organized a professional visit to Istanbul to brief audiences on Yemen.',
+    image_url: 'https://rcvdprxiflggpianisfg.supabase.co/storage/v1/object/public/hero-images/9cade7a8-aec6-403e-ad53-94d66f729549-1768011117285.jpeg',
+    display_order: 2,
+  },
+];
+
 export default function ImageSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState<Slide[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [slides, setSlides] = useState<Slide[]>(() => {
+    try {
+      const cached = localStorage.getItem('cached_hero_slides');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_SLIDES;
+  });
   const { language } = useLanguage();
 
   useEffect(() => {
@@ -39,12 +68,15 @@ export default function ImageSlider() {
 
       if (data && data.length > 0) {
         const slidesWithImages = data.filter(slide => slide.image_url && slide.image_url.trim() !== '');
-        setSlides(slidesWithImages);
+        if (slidesWithImages.length > 0) {
+          setSlides(slidesWithImages);
+          try {
+            localStorage.setItem('cached_hero_slides', JSON.stringify(slidesWithImages));
+          } catch {}
+        }
       }
     } catch (error) {
       console.error('Error loading slides:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -86,19 +118,9 @@ export default function ImageSlider() {
     return null;
   };
 
-  if (loading) {
-    return (
-      <div className="relative w-full h-[500px] lg:h-[600px] overflow-hidden bg-gradient-to-br from-emerald-50 to-gray-100 flex items-center justify-center">
-        <div className="text-gray-400 text-lg">جاري تحميل الصور...</div>
-      </div>
-    );
-  }
-
   if (slides.length === 0) {
     return (
-      <div className="relative w-full h-[500px] lg:h-[600px] overflow-hidden bg-gradient-to-br from-emerald-50 to-gray-100 flex items-center justify-center">
-        <div className="text-gray-400 text-lg">لا توجد صور متاحة</div>
-      </div>
+      <div className="relative w-full h-[500px] lg:h-[600px] overflow-hidden bg-gradient-to-br from-emerald-50 to-gray-100" />
     );
   }
 
@@ -121,44 +143,67 @@ export default function ImageSlider() {
             }}
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-          <div className={`absolute inset-0 flex items-center justify-center ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-            <div className="max-w-4xl mx-auto px-6 lg:px-12">
-              {getSlideLink(slide) ? (
-                slide.link_type === 'external' ? (
-                  <a
-                    href={getSlideLink(slide)!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block group cursor-pointer"
-                  >
-                    <h2
-                      className={`text-3xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 transition-all duration-700 delay-300 group-hover:text-emerald-300 ${
-                        index === currentSlide
-                          ? 'opacity-100 translate-y-0'
-                          : 'opacity-0 translate-y-8'
-                      }`}
+          <div className={`absolute inset-0 flex items-end ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+            <div className="w-full max-w-6xl mx-auto px-6 lg:px-12 pb-14 sm:pb-16">
+              <div className="max-w-2xl bg-black/45 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-white/15 shadow-2xl transition-all">
+                {getSlideLink(slide) ? (
+                  slide.link_type === 'external' ? (
+                    <a
+                      href={getSlideLink(slide)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block group/link cursor-pointer"
                     >
-                      {language === 'ar' ? slide.title_ar : slide.title_en}
-                    </h2>
-                    <p
-                      className={`text-lg lg:text-xl xl:text-2xl text-gray-100 transition-all duration-700 delay-500 ${
-                        index === currentSlide
-                          ? 'opacity-100 translate-y-0'
-                          : 'opacity-0 translate-y-8'
-                      }`}
+                      <h2
+                        className={`text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 leading-snug transition-all duration-700 delay-300 group-hover/link:text-emerald-300 ${
+                          index === currentSlide
+                            ? 'opacity-100 translate-y-0'
+                            : 'opacity-0 translate-y-8'
+                        }`}
+                      >
+                        {language === 'ar' ? slide.title_ar : slide.title_en}
+                      </h2>
+                      <p
+                        className={`text-xs sm:text-sm lg:text-base text-gray-200 transition-all duration-700 delay-500 line-clamp-2 leading-relaxed ${
+                          index === currentSlide
+                            ? 'opacity-100 translate-y-0'
+                            : 'opacity-0 translate-y-8'
+                        }`}
+                      >
+                        {language === 'ar' ? slide.description_ar : slide.description_en}
+                      </p>
+                    </a>
+                  ) : (
+                    <Link
+                      to={getSlideLink(slide)!}
+                      className="block group/link cursor-pointer"
                     >
-                      {language === 'ar' ? slide.description_ar : slide.description_en}
-                    </p>
-                  </a>
+                      <h2
+                        className={`text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 leading-snug transition-all duration-700 delay-300 group-hover/link:text-emerald-300 ${
+                          index === currentSlide
+                            ? 'opacity-100 translate-y-0'
+                            : 'opacity-0 translate-y-8'
+                        }`}
+                      >
+                        {language === 'ar' ? slide.title_ar : slide.title_en}
+                      </h2>
+                      <p
+                        className={`text-xs sm:text-sm lg:text-base text-gray-200 transition-all duration-700 delay-500 line-clamp-2 leading-relaxed ${
+                          index === currentSlide
+                            ? 'opacity-100 translate-y-0'
+                            : 'opacity-0 translate-y-8'
+                        }`}
+                      >
+                        {language === 'ar' ? slide.description_ar : slide.description_en}
+                      </p>
+                    </Link>
+                  )
                 ) : (
-                  <Link
-                    to={getSlideLink(slide)!}
-                    className="block group cursor-pointer"
-                  >
+                  <>
                     <h2
-                      className={`text-3xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 transition-all duration-700 delay-300 group-hover:text-emerald-300 ${
+                      className={`text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 leading-snug transition-all duration-700 delay-300 ${
                         index === currentSlide
                           ? 'opacity-100 translate-y-0'
                           : 'opacity-0 translate-y-8'
@@ -167,7 +212,7 @@ export default function ImageSlider() {
                       {language === 'ar' ? slide.title_ar : slide.title_en}
                     </h2>
                     <p
-                      className={`text-lg lg:text-xl xl:text-2xl text-gray-100 transition-all duration-700 delay-500 ${
+                      className={`text-xs sm:text-sm lg:text-base text-gray-200 transition-all duration-700 delay-500 line-clamp-2 leading-relaxed ${
                         index === currentSlide
                           ? 'opacity-100 translate-y-0'
                           : 'opacity-0 translate-y-8'
@@ -175,30 +220,9 @@ export default function ImageSlider() {
                     >
                       {language === 'ar' ? slide.description_ar : slide.description_en}
                     </p>
-                  </Link>
-                )
-              ) : (
-                <>
-                  <h2
-                    className={`text-3xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 transition-all duration-700 delay-300 ${
-                      index === currentSlide
-                        ? 'opacity-100 translate-y-0'
-                        : 'opacity-0 translate-y-8'
-                    }`}
-                  >
-                    {language === 'ar' ? slide.title_ar : slide.title_en}
-                  </h2>
-                  <p
-                    className={`text-lg lg:text-xl xl:text-2xl text-gray-100 transition-all duration-700 delay-500 ${
-                      index === currentSlide
-                        ? 'opacity-100 translate-y-0'
-                        : 'opacity-0 translate-y-8'
-                    }`}
-                  >
-                    {language === 'ar' ? slide.description_ar : slide.description_en}
-                  </p>
-                </>
-              )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

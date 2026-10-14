@@ -267,6 +267,22 @@ function ActivityForm({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const maxSize = 5 * 1024 * 1024; // 5MB limit in Supabase Storage
+      if (file.size > maxSize) {
+        alert(
+          `حجم الصورة كبير جداً (${(file.size / (1024 * 1024)).toFixed(2)} ميجابايت).\nالحد الأقصى المسموح به هو 5 ميجابايت.\nيرجى تقليل حجم الصورة (ضغطها) قبل رفعها.`
+        );
+        e.target.value = '';
+        return;
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
+        alert('صيغة الصورة غير مدعومة. الصيغ المسموحة هي: JPG, PNG, WEBP.');
+        e.target.value = '';
+        return;
+      }
+
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -284,9 +300,14 @@ function ActivityForm({
   const uploadImage = async (): Promise<string> => {
     if (!imageFile) return formData.featured_image;
 
+    const maxSize = 5 * 1024 * 1024;
+    if (imageFile.size > maxSize) {
+      throw new Error(`حجم الصورة (${(imageFile.size / (1024 * 1024)).toFixed(2)} ميجابايت) يتجاوز الحد الأقصى (5 ميجابايت).`);
+    }
+
     setUploading(true);
     try {
-      const fileExt = imageFile.name.split('.').pop();
+      const fileExt = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
@@ -294,16 +315,29 @@ function ActivityForm({
         .from('activity-images')
         .upload(filePath, imageFile);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Supabase upload error details:', uploadError);
+        const errMsg = uploadError.message || '';
+        if (errMsg.includes('exceeded the maximum allowed size') || (uploadError as any).statusCode === '413') {
+          throw new Error('حجم الصورة يتجاوز الحد الأقصى المسموح به (5 ميجابايت).');
+        }
+        if (errMsg.includes('mime') || (uploadError as any).statusCode === '400') {
+          throw new Error('صيغة الصورة غير مدعومة.');
+        }
+        if ((uploadError as any).statusCode === '401' || (uploadError as any).statusCode === '403' || errMsg.includes('policy')) {
+          throw new Error('انتهت صلاحية الجلسة أو ليس لديك صلاحية المشرف. يرجى تسجيل الخروج والدخول مجدداً.');
+        }
+        throw new Error(errMsg || 'فشل رفع الصورة');
+      }
 
       const { data } = supabase.storage
         .from('activity-images')
         .getPublicUrl(filePath);
 
       return data.publicUrl;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading image:', error);
-      throw new Error('فشل رفع الصورة');
+      throw error instanceof Error ? error : new Error('فشل رفع الصورة');
     } finally {
       setUploading(false);
     }
@@ -314,14 +348,32 @@ function ActivityForm({
     setLoading(true);
 
     try {
+      if (!formData.start_date) {
+        throw new Error('يرجى تحديد تاريخ البدء.');
+      }
+
+      const startDateObj = new Date(formData.start_date);
+      if (isNaN(startDateObj.getTime())) {
+        throw new Error('تاريخ البدء غير صالح. يرجى التأكد من إدخال التاريخ والوقت بشكل صحيح.');
+      }
+
+      let endDateIso: string | null = null;
+      if (formData.end_date) {
+        const endDateObj = new Date(formData.end_date);
+        if (isNaN(endDateObj.getTime())) {
+          throw new Error('تاريخ الانتهاء غير صالح. يرجى التأكد من إدخال التاريخ والوقت بشكل صحيح.');
+        }
+        endDateIso = endDateObj.toISOString();
+      }
+
       const imageUrl = await uploadImage();
 
       const data = {
         ...formData,
         featured_image: imageUrl,
-        start_date: new Date(formData.start_date).toISOString(),
-        end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
-        registration_link: formData.registration_link || null,
+        start_date: startDateObj.toISOString(),
+        end_date: endDateIso,
+        registration_link: formData.registration_link ? formData.registration_link.trim() : null,
       };
 
       if (activity) {
@@ -330,17 +382,28 @@ function ActivityForm({
           .update(data)
           .eq('id', activity.id);
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === '42501' || error.message?.includes('policy')) {
+            throw new Error('انتهت صلاحية الجلسة أو ليس لديك إذن المشرف. يرجى إعادة تسجيل الدخول.');
+          }
+          throw error;
+        }
       } else {
         const { error } = await supabase.from('activities').insert([data]);
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === '42501' || error.message?.includes('policy')) {
+            throw new Error('انتهت صلاحية الجلسة أو ليس لديك إذن المشرف. يرجى إعادة تسجيل الدخول.');
+          }
+          throw error;
+        }
       }
 
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving activity:', error);
-      alert('حدث خطأ أثناء حفظ النشاط');
+      const msg = error?.message || 'حدث خطأ غير معروف أثناء حفظ النشاط';
+      alert(`تعذر حفظ النشاط:\n${msg}`);
     } finally {
       setLoading(false);
     }

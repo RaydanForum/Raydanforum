@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Clock, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import SEOHead from '../components/SEOHead';
@@ -93,78 +94,96 @@ export default function ActivitiesPage() {
         ) : (
           <div className="space-y-8">
             {activities.map((activity, index) => (
-              <article
+              <Link
                 key={activity.id}
-                className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-blue-200 hover:-translate-y-1 animate-slideUp"
+                to={`/activities/${activity.id}`}
+                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-blue-200 hover:-translate-y-1 animate-slideUp block cursor-pointer"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="flex flex-col md:flex-row">
-                  <div className="md:w-2/5 h-80 md:h-auto relative overflow-hidden">
-                    <img
-                      src={activity.featured_image}
-                      alt={language === 'ar' ? activity.title_ar : activity.title_en}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <div className={`absolute top-4 ${language === 'ar' ? 'right-4' : 'left-4'}`}>
-                      <span className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full font-medium shadow-lg">
-                        {language === 'ar' ? activity.activity_type_ar : activity.activity_type_en}
-                      </span>
-                    </div>
-                    {activity.is_upcoming && (
-                      <div className={`absolute bottom-4 ${language === 'ar' ? 'right-4' : 'left-4'}`}>
-                        <span className="px-3 py-1 bg-green-600 text-white text-sm rounded-full font-medium shadow-lg">
-                          {language === 'ar' ? 'قريباً' : 'Upcoming'}
+                <div className="flex flex-col md:flex-row items-stretch">
+                  <div className="w-full md:w-80 lg:w-96 flex-shrink-0 p-4 sm:p-5 flex items-center justify-center bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30">
+                    <div className="relative w-full h-64 sm:h-72 md:h-80 rounded-xl overflow-hidden shadow-sm border border-gray-200/80 bg-slate-950 flex items-center justify-center">
+                      <img
+                        src={activity.featured_image}
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-125 pointer-events-none"
+                      />
+                      <img
+                        src={activity.featured_image}
+                        alt={language === 'ar' ? activity.title_ar : activity.title_en}
+                        className="relative max-h-full max-w-full w-auto h-auto object-contain z-10 p-1.5 transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className={`absolute top-3 ${language === 'ar' ? 'right-3' : 'left-3'} z-20`}>
+                        <span className="px-3 py-1 bg-blue-600/90 text-white text-xs rounded-full font-semibold shadow-md backdrop-blur-sm">
+                          {language === 'ar' ? activity.activity_type_ar : activity.activity_type_en}
                         </span>
                       </div>
-                    )}
+                      {activity.is_upcoming && (
+                        <div className={`absolute bottom-3 ${language === 'ar' ? 'right-3' : 'left-3'} z-20`}>
+                          <span className="px-3 py-1 bg-emerald-600/90 text-white text-xs rounded-full font-semibold shadow-md backdrop-blur-sm">
+                            {language === 'ar' ? 'قريباً' : 'Upcoming'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className={`md:w-3/5 p-8 lg:p-10 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                    <h3 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors leading-tight">
-                      {language === 'ar' ? activity.title_ar : activity.title_en}
-                    </h3>
-
-                    <p className="text-gray-700 mb-6 text-lg leading-relaxed">
-                      {language === 'ar' ? activity.description_ar : activity.description_en}
-                    </p>
-
-                    <div className="space-y-3">
-                      <div className={`flex items-center gap-3 text-gray-600 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                          <Clock className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            {language === 'ar' ? 'التاريخ' : 'Date'}
-                          </p>
-                          <p className="font-semibold">
-                            {new Date(activity.start_date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </p>
-                        </div>
+                  <div className={`flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-between ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs rounded-md font-semibold border border-blue-100">
+                          {language === 'ar' ? activity.activity_type_ar : activity.activity_type_en}
+                        </span>
+                        {activity.is_upcoming && (
+                          <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs rounded-md font-semibold border border-emerald-100">
+                            {language === 'ar' ? 'نشاط قادم' : 'Upcoming Event'}
+                          </span>
+                        )}
                       </div>
 
-                      <div className={`flex items-center gap-3 text-gray-600 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                          <MapPin className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            {language === 'ar' ? 'الموقع' : 'Location'}
-                          </p>
-                          <p className="font-semibold">
+                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2">
+                        {language === 'ar' ? activity.title_ar : activity.title_en}
+                      </h2>
+
+                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-6 line-clamp-3 sm:line-clamp-4">
+                        {language === 'ar' ? activity.description_ar : activity.description_en}
+                      </p>
+                    </div>
+
+                    <div className="pt-5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className={`flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <span className="inline-flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span className="font-medium">
+                            {new Date(activity.start_date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </span>
+
+                        <span className="inline-flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                          <MapPin className="w-4 h-4 text-blue-600" />
+                          <span className="font-medium line-clamp-1">
                             {language === 'ar' ? activity.location_ar : activity.location_en}
-                          </p>
-                        </div>
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className={`inline-flex items-center gap-2 text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <span>{language === 'ar' ? 'عرض التفاصيل' : 'View Details'}</span>
+                        {language === 'ar' ? (
+                          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        ) : (
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         )}
